@@ -1,0 +1,9 @@
+[package]
+name = "ratecheck"
+version = "0.2.0"
+edition = "2021"
+license = "LicenseRef-COCL-1.0"
+
+[[bin]]
+name = "ratecheck"
+path = "src/main.rs"
