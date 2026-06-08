@@ -1,0 +1,21 @@
+{
+  "target": "https://api.example.com/v1/login",
+  "method": "POST",
+  "window_seconds": 1.0,
+  "expected_limit": 5,
+  "auth_required": true,
+  "probes": [
+    {"t": 0.00, "status": 401, "headers": {}},
+    {"t": 0.05, "status": 401, "headers": {}},
+    {"t": 0.10, "status": 401, "headers": {}},
+    {"t": 0.15, "status": 401, "headers": {}},
+    {"t": 0.20, "status": 401, "headers": {}},
+    {"t": 0.25, "status": 401, "headers": {}},
+    {"t": 0.30, "status": 401, "headers": {}},
+    {"t": 0.35, "status": 401, "headers": {}},
+    {"t": 0.40, "status": 401, "headers": {}},
+    {"t": 0.45, "status": 401, "headers": {}},
+    {"t": 0.50, "status": 401, "headers": {}},
+    {"t": 0.55, "status": 401, "headers": {}}
+  ]
+}
