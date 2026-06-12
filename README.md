@@ -16,7 +16,7 @@
 </div>
 
 ```bash
-pip install cognis-ratecheck
+pip install "git+https://github.com/cognis-digital/ratecheck.git"
 ratecheck scan .            # → prioritized findings in seconds
 ```
 
@@ -47,7 +47,7 @@ abuse-resistance check
 ## Quick start
 
 ```bash
-pip install cognis-ratecheck
+pip install "git+https://github.com/cognis-digital/ratecheck.git"
 ratecheck --version
 ratecheck scan .                       # scan current project
 ratecheck scan . --format json         # machine-readable
