@@ -20,6 +20,45 @@ pip install cognis-ratecheck
 ratecheck scan .            # → prioritized findings in seconds
 ```
 
+## Usage — step by step
+
+1. Install the CLI (Python 3.9+):
+
+   ```bash
+   pip install git+https://github.com/cognis-digital/ratecheck.git
+   ```
+
+2. Analyze an authorized probe trace for rate-limit / abuse-resistance weaknesses:
+
+   ```bash
+   ratecheck check probe-spec.json
+   ```
+
+3. Get machine-readable output for tooling or storage:
+
+   ```bash
+   ratecheck check probe-spec.json --format json > report.json
+   ```
+
+4. Read the result. The JSON report carries the findings and an `actionable`
+   flag; the process exit code is `1` when there are actionable findings and
+   `0` when the posture is clean (`2` on bad input):
+
+   ```bash
+   ratecheck check probe-spec.json; echo "exit=$?"
+   ```
+
+5. Wire it into CI so a weak rate-limit posture fails the build:
+
+   ```yaml
+   - name: rate-limit posture check
+     run: |
+       pip install git+https://github.com/cognis-digital/ratecheck.git
+       ratecheck check probe-spec.json --format json
+   ```
+
+> Defensive / authorized-testing use only.
+
 ## Contents
 
 - [Why ratecheck?](#why) · [Features](#features) · [Quick start](#quick-start) · [Example](#example) · [Architecture](#architecture) · [AI stack](#ai-stack) · [How it compares](#how-it-compares) · [Integrations](#integrations) · [Install anywhere](#install-anywhere) · [Related](#related) · [Contributing](#contributing)
