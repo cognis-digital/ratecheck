@@ -20,6 +20,12 @@ pip install "git+https://github.com/cognis-digital/ratecheck.git"
 ratecheck scan .            # → prioritized findings in seconds
 ```
 
+<!-- cognis:layman:start -->
+## What is this?
+
+ratecheck is a command-line tool that checks whether an API endpoint protects itself against too many requests at once. You give it a file describing what happened when you (or an authorized tester) sent a burst of requests — which ones were accepted, which were blocked, and what the server replied — and ratecheck tells you if the protection is missing, weak, or properly configured. It flags problems like "any number of login attempts goes through" or "the server crashes under load instead of politely saying slow down." It is for developers and security testers who want a quick, scriptable audit of rate limiting before shipping or as part of automated CI checks.
+<!-- cognis:layman:end -->
+
 ## Contents
 
 - [Why ratecheck?](#why) · [Features](#features) · [Quick start](#quick-start) · [Example](#example) · [Architecture](#architecture) · [AI stack](#ai-stack) · [How it compares](#how-it-compares) · [Integrations](#integrations) · [Install anywhere](#install-anywhere) · [Related](#related) · [Contributing](#contributing)
@@ -44,6 +50,42 @@ abuse-resistance check
 <div align="right"><a href="#top">↑ back to top</a></div>
 
 <a name="quick-start"></a>
+<!-- cognis:install:start -->
+## Install
+
+`ratecheck` is source-available (not published to PyPI) — every method below installs
+straight from GitHub. Pick whichever you prefer; the one-line scripts auto-detect
+the best tool available on your machine.
+
+**One-liner (Linux / macOS):**
+```sh
+curl -fsSL https://raw.githubusercontent.com/cognis-digital/ratecheck/HEAD/install.sh | sh
+```
+
+**One-liner (Windows PowerShell):**
+```powershell
+irm https://raw.githubusercontent.com/cognis-digital/ratecheck/HEAD/install.ps1 | iex
+```
+
+**Or install manually — any one of:**
+```sh
+pipx install "git+https://github.com/cognis-digital/ratecheck.git"     # isolated (recommended)
+uv tool install "git+https://github.com/cognis-digital/ratecheck.git"  # uv
+pip install "git+https://github.com/cognis-digital/ratecheck.git"      # pip
+```
+
+**From source:**
+```sh
+git clone https://github.com/cognis-digital/ratecheck.git
+cd ratecheck && pip install .
+```
+
+Then run:
+```sh
+ratecheck --help
+```
+<!-- cognis:install:end -->
+
 ## Quick start
 
 ```bash
