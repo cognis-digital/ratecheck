@@ -34,3 +34,6 @@ ratecheck = "ratecheck.cli:main"
 
 [tool.hatch.build.targets.wheel]
 packages = ["ratecheck"]
+
+[tool.hatch.metadata]
+allow-direct-references = true
