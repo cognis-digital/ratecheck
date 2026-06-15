@@ -4,8 +4,9 @@ import io
 import json
 import os
 import sys
+import tempfile
 import unittest
-from contextlib import redirect_stdout
+from contextlib import redirect_stdout, redirect_stderr
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -158,6 +159,85 @@ class TestCLI(unittest.TestCase):
     def test_no_command_prints_help(self):
         rc = main([])
         self.assertEqual(rc, 2)
+
+    def test_malformed_json_file_exit_2(self):
+        """A file with invalid JSON should exit 2 with a message to stderr."""
+        with tempfile.NamedTemporaryFile(suffix=".json", mode="w", delete=False) as f:
+            f.write("{not valid json}")
+            tmp = f.name
+        try:
+            err = io.StringIO()
+            with redirect_stderr(err):
+                rc = main(["check", tmp])
+            self.assertEqual(rc, 2)
+            self.assertIn("invalid spec", err.getvalue())
+        finally:
+            os.unlink(tmp)
+
+    def test_json_array_root_exit_2(self):
+        """A spec file that is a JSON array (not object) should exit 2."""
+        with tempfile.NamedTemporaryFile(suffix=".json", mode="w", delete=False) as f:
+            f.write('[{"target":"x"}]')
+            tmp = f.name
+        try:
+            err = io.StringIO()
+            with redirect_stderr(err):
+                rc = main(["check", tmp])
+            self.assertEqual(rc, 2)
+            self.assertIn("invalid spec", err.getvalue())
+        finally:
+            os.unlink(tmp)
+
+    def test_empty_probes_no_crash(self):
+        """An empty probes list must not raise — just zero findings."""
+        spec = _spec(probes=[])
+        report = analyze_spec(spec)
+        self.assertEqual(report.summary["total_probes"], 0)
+        self.assertFalse(report.actionable)
+
+    def test_probe_bad_status_raises_valueerror(self):
+        """A probe with a non-numeric status must raise ValueError cleanly."""
+        from ratecheck.core import Probe
+        with self.assertRaises(ValueError) as ctx:
+            Probe.from_dict({"t": 0.0, "status": "OK"})
+        self.assertIn("status", str(ctx.exception))
+
+    def test_probe_invalid_status_range_raises(self):
+        """A probe status outside 100-599 must raise ValueError."""
+        from ratecheck.core import Probe
+        with self.assertRaises(ValueError):
+            Probe.from_dict({"t": 0.0, "status": 99})
+        with self.assertRaises(ValueError):
+            Probe.from_dict({"t": 0.0, "status": 600})
+
+    def test_spec_negative_window_raises(self):
+        """window_seconds < 0 must raise ValueError."""
+        with self.assertRaises(ValueError):
+            _spec(window_seconds=-1.0)
+
+    def test_spec_empty_target_raises(self):
+        """An empty target string must raise ValueError."""
+        from ratecheck.core import Spec
+        with self.assertRaises(ValueError):
+            Spec.from_dict({"target": "   ", "probes": []})
+
+    def test_spec_non_list_probes_raises(self):
+        """probes that is not a list must raise ValueError."""
+        from ratecheck.core import Spec
+        with self.assertRaises(ValueError):
+            Spec.from_dict({"target": "https://x.example.com", "probes": "bad"})
+
+    def test_zero_window_derived_single_probe(self):
+        """A single probe with only one timestamp: window derives to 0, no crash."""
+        from ratecheck.core import Spec
+        spec = Spec.from_dict({
+            "target": "https://x.example.com",
+            "probes": [{"t": 5.0, "status": 200}],
+        })
+        self.assertEqual(spec.window_seconds, 0.0)
+        report = analyze_spec(spec)
+        # Should not crash; effective_rps is None when window is 0
+        self.assertIsNone(report.summary["effective_rps"])
 
 
 if __name__ == "__main__":

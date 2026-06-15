@@ -59,14 +59,30 @@ class Probe:
 
     @staticmethod
     def from_dict(d: Dict[str, Any]) -> "Probe":
+        if not isinstance(d, dict):
+            raise ValueError(f"each probe must be a JSON object, got {type(d).__name__}")
         if "status" not in d:
             raise ValueError("probe missing required field 'status'")
+        try:
+            t_val = float(d.get("t", 0.0))
+        except (TypeError, ValueError) as exc:
+            raise ValueError(f"probe 't' must be a number: {exc}") from exc
+        try:
+            status_val = int(d["status"])
+        except (TypeError, ValueError) as exc:
+            raise ValueError(f"probe 'status' must be an integer: {exc}") from exc
+        if not (100 <= status_val <= 599):
+            raise ValueError(
+                f"probe 'status' {status_val} is not a valid HTTP status code (100-599)"
+            )
         raw_headers = d.get("headers", {}) or {}
+        if not isinstance(raw_headers, dict):
+            raise ValueError("probe 'headers' must be a JSON object")
         # Normalize header keys to lowercase for case-insensitive lookups.
         headers = {str(k).lower(): str(v) for k, v in raw_headers.items()}
         return Probe(
-            t=float(d.get("t", 0.0)),
-            status=int(d["status"]),
+            t=t_val,
+            status=status_val,
             headers=headers,
         )
 
@@ -84,21 +100,46 @@ class Spec:
 
     @staticmethod
     def from_dict(d: Dict[str, Any]) -> "Spec":
+        if not isinstance(d, dict):
+            raise ValueError(f"spec must be a JSON object, got {type(d).__name__}")
         if "target" not in d:
             raise ValueError("spec missing required field 'target'")
+        target = str(d["target"]).strip()
+        if not target:
+            raise ValueError("spec 'target' must not be empty")
         probes_raw = d.get("probes", []) or []
         if not isinstance(probes_raw, list):
             raise ValueError("'probes' must be a list")
         probes = [Probe.from_dict(p) for p in probes_raw]
-        win = d.get("window_seconds")
+        win_raw = d.get("window_seconds")
+        if win_raw is not None:
+            try:
+                win = float(win_raw)
+            except (TypeError, ValueError) as exc:
+                raise ValueError(f"'window_seconds' must be a number: {exc}") from exc
+            if win < 0:
+                raise ValueError(f"'window_seconds' must be >= 0, got {win}")
+        else:
+            win = None
         if win in (None, 0, 0.0) and probes:
             # Derive window from probe timestamps if not supplied.
-            win = max(p.t for p in probes) - min(p.t for p in probes)
+            ts = [p.t for p in probes]
+            win = max(ts) - min(ts)
+        exp_limit_raw = d.get("expected_limit")
+        if exp_limit_raw is not None:
+            try:
+                exp_limit: Optional[int] = int(exp_limit_raw)
+            except (TypeError, ValueError) as exc:
+                raise ValueError(f"'expected_limit' must be an integer: {exc}") from exc
+            if exp_limit < 0:
+                raise ValueError(f"'expected_limit' must be >= 0, got {exp_limit}")
+        else:
+            exp_limit = None
         return Spec(
-            target=str(d["target"]),
+            target=target,
             method=str(d.get("method", "GET")).upper(),
             window_seconds=float(win or 0.0),
-            expected_limit=(int(d["expected_limit"]) if d.get("expected_limit") is not None else None),
+            expected_limit=exp_limit,
             auth_required=bool(d.get("auth_required", False)),
             probes=probes,
         )
@@ -150,8 +191,21 @@ class Report:
 
 
 def load_spec(path: str) -> Spec:
-    with open(path, "r", encoding="utf-8") as fh:
-        data = json.load(fh)
+    """Load and parse a spec file.
+
+    Raises:
+        FileNotFoundError: if *path* does not exist.
+        ValueError: if the file is not valid JSON or fails spec validation.
+    """
+    try:
+        with open(path, "r", encoding="utf-8") as fh:
+            data = json.load(fh)
+    except json.JSONDecodeError as exc:
+        raise ValueError(f"spec file is not valid JSON: {exc}") from exc
+    if not isinstance(data, dict):
+        raise ValueError(
+            f"spec must be a JSON object (got {type(data).__name__})"
+        )
     return Spec.from_dict(data)
 
 

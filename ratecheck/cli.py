@@ -98,8 +98,12 @@ def main(argv: Optional[List[str]] = None) -> int:
     parser = _build_parser()
     args = parser.parse_args(argv)
 
+    if not args.command:
+        parser.print_help(sys.stderr)
+        return 2
+
     if args.command != "check":
-        parser.print_help()
+        parser.print_help(sys.stderr)
         return 2
 
     try:
@@ -111,7 +115,11 @@ def main(argv: Optional[List[str]] = None) -> int:
         print(f"error: invalid spec: {exc}", file=sys.stderr)
         return 2
 
-    report = analyze_spec(spec, tool=TOOL_NAME, version=TOOL_VERSION)
+    try:
+        report = analyze_spec(spec, tool=TOOL_NAME, version=TOOL_VERSION)
+    except Exception as exc:  # pragma: no cover
+        print(f"error: analysis failed unexpectedly: {exc}", file=sys.stderr)
+        return 2
 
     if args.format == "json":
         print(json.dumps(report.to_dict(), indent=2))
