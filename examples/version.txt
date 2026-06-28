@@ -1,0 +1,3 @@
+$ ratecheck-emit --version
+
+ratecheck 0.1.0

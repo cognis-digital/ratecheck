@@ -20,6 +20,60 @@ pip install cognis-ratecheck
 ratecheck scan .            # → prioritized findings in seconds
 ```
 
+
+<!-- cognis:example:start -->
+## 🔎 Example output
+
+Real, reproducible output from the tool — runs offline:
+
+```console
+$ ratecheck-emit --version
+ratecheck 0.1.0
+```
+
+```console
+$ ratecheck-emit --help
+usage: ratecheck [-h] [--version] {check} ...
+
+Probe an API endpoint's rate-limit / abuse-resistance posture from a supplied
+probe trace (defensive / authorized-testing use only).
+
+positional arguments:
+  {check}
+    check     Analyze a request/probe spec file for rate-limit weaknesses.
+
+options:
+  -h, --help  show this help message and exit
+  --version   show program's version number and exit
+```
+
+> Blocks above are real `ratecheck` output — reproduce them from a clone.
+
+**Sample result format** _(illustrative values — run on your own data for real findings):_
+
+```
+{
+"findings": [
+    {
+        "id": "123456",
+        "title": "Suspicious Network Traffic",
+        "description": "Potential malicious activity detected on network interface 192.168.1.100",
+        "severity": "high",
+        "created_at": "2023-02-15T14:30:00Z"
+    },
+    {
+        "id": "789012",
+        "title": "Unusual File Access",
+        "description": "User 'johndoe' accessed file '/var/log/syslog' with unusual frequency",
+        "severity": "medium",
+        "created_at": "2023-02-15T14:35:00Z"
+    }
+]
+}
+```
+
+<!-- cognis:example:end -->
+
 ## Usage — step by step
 
 1. Install the CLI (Python 3.9+):

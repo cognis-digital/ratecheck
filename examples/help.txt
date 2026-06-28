@@ -1,0 +1,14 @@
+$ ratecheck-emit --help
+
+usage: ratecheck [-h] [--version] {check} ...
+
+Probe an API endpoint's rate-limit / abuse-resistance posture from a supplied
+probe trace (defensive / authorized-testing use only).
+
+positional arguments:
+  {check}
+    check     Analyze a request/probe spec file for rate-limit weaknesses.
+
+options:
+  -h, --help  show this help message and exit
+  --version   show program's version number and exit
